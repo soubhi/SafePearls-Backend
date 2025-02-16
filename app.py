@@ -28,20 +28,30 @@ def call_gemini_chat(session_id, user_input):
     # Append new user message
     messages = context + [{"role": "user", "parts": [{"text": user_input}]}]
 
-    # Call Gemini API
-    response = model.generate_content(messages)
+    try:
+        # Call Gemini API
+        response = model.generate_content(messages)
 
-    # Extract AI's response
-    bot_response = response.text if response.text else "I'm not sure how to respond."
+        # ✅ Handle cases where Gemini refuses to generate a response
+        if not response.candidates or not response.candidates[0].content.parts:
+            print("⚠️ Gemini refused to generate a response due to safety filters.")
+            bot_response = "I'm sorry, but I can't generate a response for that."
+        else:
+            bot_response = response.text if response.text else "I'm not sure how to respond."
 
-    # Update session with AI response
+    except Exception as e:
+        print(f"❌ Gemini API Error: {str(e)}")
+        bot_response = "Oops! I encountered an error. Please try again."
+
+    # ✅ Save conversation history
     context.append({"role": "user", "parts": [{"text": user_input}]})
     context.append({"role": "model", "parts": [{"text": bot_response}]})
 
-    # Store updated conversation
+    # ✅ Store updated conversation
     SESSIONS[session_id] = context
 
     return bot_response
+
 
 @app.route("/")
 def home():

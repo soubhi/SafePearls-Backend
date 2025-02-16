@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chatbot</title>
+    <script>
+        let sessionId = null;
+
+        async function startSession() {
+            const response = await fetch('/new_session', { method: 'POST' });
+            const data = await response.json();
+            sessionId = data.sessionId;
+            document.getElementById('session-id').innerText = `Session ID: ${sessionId}`;
+        }
+
+        async function sendMessage() {
+            const message = document.getElementById('userMessage').value;
+            if (!message) return alert("Please enter a message");
+
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId, userMessage: message })
+            });
+
+            const data = await response.json();
+            document.getElementById('chat-history').innerHTML += `<p><strong>You:</strong> ${message}</p>`;
+            document.getElementById('chat-history').innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+            document.getElementById('userMessage').value = "";
+        }
+
+        async function endSession() {
+            if (!sessionId) return alert("No active session.");
+            await fetch('/end_session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId })
+            });
+            sessionId = null;
+            document.getElementById('session-id').innerText = "Session ended.";
+        }
+    </script>
+</head>
+<body onload="startSession()">
+    <h2>Gemini Chatbot</h2>
+    <p id="session-id">Starting session...</p>
+    <div id="chat-history" style="border:1px solid #ccc; padding:10px; width:300px; height:200px; overflow-y:auto;"></div>
+    <input type="text" id="userMessage" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="endSession()">End Session</button>
+</body>
+</html>

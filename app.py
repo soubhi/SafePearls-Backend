@@ -3,12 +3,11 @@ import uuid  # Generate unique session IDs
 import google.generativeai as genai
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
+from flask_cors import CORS  # ✅ Import CORS
 
-# ✅ Load API key from .env file or environment variables
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 
-# ✅ Configure Gemini API
 if not api_key:
     raise ValueError("❌ GEMINI_API_KEY is missing! Set it in .env or environment variables.")
 genai.configure(api_key=api_key)
@@ -16,8 +15,8 @@ model = genai.GenerativeModel("gemini-pro")
 
 # ✅ Initialize Flask app
 app = Flask(__name__)
+CORS(app)
 
-# ✅ Store ephemeral conversation sessions
 SESSIONS = {}
 
 def call_gemini_chat(session_id, user_input):
